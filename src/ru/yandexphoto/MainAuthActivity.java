@@ -17,10 +17,9 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -50,6 +49,15 @@ public class MainAuthActivity extends FragmentActivity {
     public void onCreate (Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+//        getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+//            @Override
+//            public void onBackStackChanged() {
+//                Log.d(LOG_TAG, "=== stack changed ===");
+//                for(int i = 0; i != getSupportFragmentManager().getBackStackEntryCount(); ++i) {
+//                    Log.d(LOG_TAG, i + ") " + getSupportFragmentManager().getBackStackEntryAt(i).getName());
+//                }
+//            }
+//        });
         if (getIntent() != null && getIntent().getData() != null) {
             onLogin();
         }
@@ -70,6 +78,7 @@ public class MainAuthActivity extends FragmentActivity {
         getSupportFragmentManager()
         .beginTransaction()
         .replace(android.R.id.content, new FileListFragment(), FileListFragment.FRAGMENT_TAG)
+        .addToBackStack(FileListFragment.FRAGMENT_TAG)
         .commit();
     }
 
@@ -208,12 +217,5 @@ public class MainAuthActivity extends FragmentActivity {
                     })
                     .create();
         }
-    };
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_menu, menu);
-        return super.onCreateOptionsMenu(menu);
     }
 }

@@ -7,7 +7,6 @@ import android.support.v4.content.Loader;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.*;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -41,6 +40,7 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
         setCurrentDirIfNeeded();
 
         if(getActivity().getActionBar() != null) {
+            getActivity().getActionBar().show();
             getActivity().getActionBar().setDisplayHomeAsUpEnabled(!ROOT_DIR.equals(currentDir));
         }
         initFileListLoading();
@@ -70,48 +70,6 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
         setListShown(false);
         getLoaderManager().initLoader(0, null, this);
     }
-//
-//    public void restartLoader() {
-//        getLoaderManager().restartLoader(0, null, this);
-//    }
-
-//    @Override
-//    public void onCreateContextMenu(ContextMenu main_menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-//        super.onCreateContextMenu(main_menu, v, menuInfo);
-//
-////        main_menu.setHeaderTitle(getListItem(menuInfo).getDisplayName());
-//
-////        MenuInflater inflater = getActivity().getMenuInflater();
-////        inflater.inflate(R.main_menu.example_context_menu, main_menu);
-//    }
-
-//    @Override
-//    public boolean onContextItemSelected(MenuItem item) {
-//        ListItem listItem = getListItem(item.getMenuInfo());
-//        switch (item.getItemId()) {
-//            case R.id.example_context_publish:
-//                Log.d(LOG_TAG, "onContextItemSelected: publish: listItem="+listItem);
-//                if (listItem.getPublicUrl() != null) {
-//                    ShowPublicUrlDialogFragment.newInstance(credentials, listItem).show(getFragmentManager(), "showPublicUrlDialog");
-//                } else {
-//                    MakeItemPublicFragment.newInstance(credentials, listItem.getFullPath(), true).show(getFragmentManager(), "makeItemPublic");
-//                }
-//                return true;
-//            case R.id.example_context_move:
-//                RenameMoveDialogFragment.newInstance(credentials, listItem).show(getFragmentManager(), "renameMoveDialog");
-//                return true;
-//            case R.id.example_context_delete:
-//                DeleteItemDialogFragment.newInstance(credentials, listItem).show(getFragmentManager(), "deleteItemDialog");
-//                return true;
-//            default:
-//                return super.onContextItemSelected(item);
-//        }
-//    }
-
-//    private ListItem getListItem(ContextMenu.ContextMenuInfo menuInfo) {
-//        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-//        return (ListItem) getListAdapter().getItem(info.position);
-//    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -123,44 +81,24 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case android.R.id.home:
-                getFragmentManager().popBackStack();
+                getActivity().getSupportFragmentManager().popBackStack();
                 break;
-//            case R.id.example_add_file:
-//                openAddFileDialog();
-//                break;
-//            case R.id.example_make_folder:
-//                MakeFolderDialogFragment.newInstance(credentials, currentDir).show(getFragmentManager(), "makeFolderName");
-//                break;
+            case R.id.start_slideshow:
+                launchSlideshow();
+                break;
             default:
                 return super.onOptionsItemSelected(item);
         }
         return true;
     }
 
-//    private void openAddFileDialog() {
-//        Intent intent = new Intent();
-//        intent.setAction(Intent.ACTION_GET_CONTENT);
-//        intent.setType("*/*");
-//        intent.addCategory(Intent.CATEGORY_OPENABLE);
-//        startActivityForResult(Intent.createChooser(intent, getText(R.string.example_loading_get_file_to_upload_chooser_title)), GET_FILE_TO_UPLOAD);
-//    }
-
-//    @Override
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        switch (requestCode) {
-//            case GET_FILE_TO_UPLOAD:
-//                if (resultCode == Activity.RESULT_OK) {
-//                    Uri uri = data.getData();
-//                    if ("file".equalsIgnoreCase(uri.getScheme())) {
-//                        uploadFile(uri.getPath());
-//                    } else {
-//                        Toast.makeText(getActivity(), R.string.example_get_file_unsupported_scheme, Toast.LENGTH_LONG).show();
-//                    }
-//                }
-//                break;
-//        }
-//        super.onActivityResult(requestCode, resultCode, data);
-//    }
+    private void launchSlideshow() {
+        getActivity().getSupportFragmentManager()
+        .beginTransaction()
+        .replace(android.R.id.content, new SlideshowFragment(), SlideshowFragment.FRAGMENT_TAG)
+        .addToBackStack(SlideshowFragment.FRAGMENT_TAG)
+        .commit();
+    }
 
     // LoaderCallbacks methods overriding
     @Override
@@ -178,7 +116,7 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
         if (data.isEmpty()) {
             Exception ex = ((FileListLoader) loader).getLastException();
             if (ex != null) {
-                setEmptyText(((FileListLoader) loader).getLastException().getMessage());
+                setEmptyText(ex.getMessage());
             } else {
                 setDefaultEmptyText();
             }
@@ -196,7 +134,6 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
     @Override
     public void onListItemClick(ListView listView, View view, int position, long id) {
         ListItem item = (ListItem) getListAdapter().getItem(position);
-        Log.d(LOG_TAG, "onListItemClick(): " + item);
         if (item.isCollection()) {
             changeDir(item.getFullPath());
         } else {
@@ -211,10 +148,10 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
         FileListFragment fragment = new FileListFragment();
         fragment.setArguments(args);
 
-        getFragmentManager()
+        getActivity().getSupportFragmentManager()
         .beginTransaction()
         .replace(android.R.id.content, fragment, FRAGMENT_TAG)
-        .addToBackStack(null)
+        .addToBackStack(FRAGMENT_TAG)
         .commit();
     }
 
