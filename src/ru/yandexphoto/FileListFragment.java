@@ -1,6 +1,7 @@
 package ru.yandexphoto;
 
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 import com.yandex.disk.client.Credentials;
 import com.yandex.disk.client.ListItem;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FileListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<List<ListItem>> {
@@ -93,11 +95,20 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
     }
 
     private void launchSlideshow() {
-        getActivity().getSupportFragmentManager()
-        .beginTransaction()
-        .replace(android.R.id.content, new SlideshowFragment(), SlideshowFragment.FRAGMENT_TAG)
-        .addToBackStack(SlideshowFragment.FRAGMENT_TAG)
-        .commit();
+        List<String> imagePaths = getImagesPaths();
+        Fragment slideshowFragment = new SlideshowFragment(credentials, imagePaths);
+        ReplaceFragment(slideshowFragment, SlideshowFragment.FRAGMENT_TAG);
+    }
+
+    private List<String> getImagesPaths() {
+        List<String> paths = new ArrayList<String>();
+        for (int i = 0; i < fileListAdapter.getCount(); i++) {
+            ListItem listItem = fileListAdapter.getItem(i);
+            if(!listItem.isCollection() && listItem.getContentType().startsWith("image")) {
+                paths.add(listItem.getFullPath());
+            }
+        }
+        return paths;
     }
 
     // LoaderCallbacks methods overriding
@@ -147,11 +158,14 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
 
         FileListFragment fragment = new FileListFragment();
         fragment.setArguments(args);
+        ReplaceFragment(fragment, FRAGMENT_TAG);
+    }
 
+    private void ReplaceFragment(Fragment fragment, String fragmentTag) {
         getActivity().getSupportFragmentManager()
         .beginTransaction()
-        .replace(android.R.id.content, fragment, FRAGMENT_TAG)
-        .addToBackStack(FRAGMENT_TAG)
+        .replace(android.R.id.content, fragment, fragmentTag)
+        .addToBackStack(fragmentTag)
         .commit();
     }
 
