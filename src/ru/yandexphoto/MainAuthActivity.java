@@ -48,20 +48,9 @@ public class MainAuthActivity extends FragmentActivity {
     @Override
     public void onCreate (Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-//        getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
-//            @Override
-//            public void onBackStackChanged() {
-//                Log.d(LOG_TAG, "=== stack changed ===");
-//                for(int i = 0; i != getSupportFragmentManager().getBackStackEntryCount(); ++i) {
-//                    Log.d(LOG_TAG, i + ") " + getSupportFragmentManager().getBackStackEntryAt(i).getName());
-//                }
-//            }
-//        });
         if (getIntent() != null && getIntent().getData() != null) {
             onLogin();
         }
-
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String token = preferences.getString(TOKEN_ENTRY, null);
         if (token == null) {
@@ -78,7 +67,6 @@ public class MainAuthActivity extends FragmentActivity {
         getSupportFragmentManager()
         .beginTransaction()
         .replace(android.R.id.content, new FileListFragment(), FileListFragment.FRAGMENT_TAG)
-        .addToBackStack(FileListFragment.FRAGMENT_TAG)
         .commit();
     }
 

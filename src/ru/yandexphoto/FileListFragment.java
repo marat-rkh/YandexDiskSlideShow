@@ -95,13 +95,17 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
     }
 
     private void launchSlideshow() {
-        List<String> imagePaths = getImagesPaths();
-        Fragment slideshowFragment = new SlideshowFragment(credentials, imagePaths);
+        ArrayList<String> imagePaths = getImagesPaths();
+        Bundle args = new Bundle();
+        args.putParcelable(SlideshowFragment.CREDENTIALS_ARG, credentials);
+        args.putStringArrayList(SlideshowFragment.IMG_PATHS_ARG, imagePaths);
+        Fragment slideshowFragment = new SlideshowFragment();
+        slideshowFragment.setArguments(args);
         ReplaceFragment(slideshowFragment, SlideshowFragment.FRAGMENT_TAG);
     }
 
-    private List<String> getImagesPaths() {
-        List<String> paths = new ArrayList<String>();
+    private ArrayList<String> getImagesPaths() {
+        ArrayList<String> paths = new ArrayList<String>();
         for (int i = 0; i < fileListAdapter.getCount(); i++) {
             ListItem listItem = fileListAdapter.getItem(i);
             if(!listItem.isCollection() && listItem.getContentType().startsWith("image")) {

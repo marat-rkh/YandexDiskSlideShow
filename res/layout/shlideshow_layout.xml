@@ -7,13 +7,15 @@
     <FrameLayout
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:id="@+id/progress_indicator">
+            android:id="@+id/progress_view">
         <ProgressBar
+                android:id="@+id/progress_indicator"
                 style="?android:attr/progressBarStyleLarge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center" />
         <TextView
+                android:id="@+id/progress_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/files_loading"
@@ -21,9 +23,13 @@
                 android:paddingTop="@android:dimen/thumbnail_height"/>
     </FrameLayout>
 
-    <ViewFlipper
-            android:id="@+id/view_flipper"
+    <!--<ViewFlipper-->
+            <!--android:id="@+id/view_flipper"-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_height="fill_parent" >-->
+    <!--</ViewFlipper>-->
+    <ImageView
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent" >
-    </ViewFlipper>
+            android:layout_height="fill_parent"
+            android:id="@+id/main_image_view"/>
 </FrameLayout>

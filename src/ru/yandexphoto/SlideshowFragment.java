@@ -3,7 +3,8 @@ package ru.yandexphoto;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -11,40 +12,43 @@ import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.*;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ViewFlipper;
 import com.yandex.disk.client.Credentials;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class SlideshowFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<File>> {
 
     private static final String LOG_TAG = "SlideshowFragment";
     public static final String FRAGMENT_TAG = "SlideshowView";
+    public static final String CREDENTIALS_ARG = "CredentialsArg";
+    public static final String IMG_PATHS_ARG = "ImgPathsArg";
 
     private final String LOADED_IMAGES_DIR = "LoadedImages";
 
-    private ViewFlipper viewFlipper = null;
-    private View filesLoadingProgressIndicator;
+    private ImageView mainImageView = null;
+    private View filesLoadingProgressView;
+    private int currentImage = 0;
+
+    private ScheduledExecutorService scheduleTaskExecutor = null;
 
     private Credentials credentials;
     private List<String> imagesPaths;
     private List<String> storePaths;
-
-    public SlideshowFragment(Credentials credentials, List<String> imagesPaths) {
-        this.credentials = credentials;
-        this.imagesPaths = imagesPaths;
-    }
 
     // Fragment lifecycle methods overriding
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View slideshowView = inflater.inflate(R.layout.shlideshow_layout, container, false);
         if(slideshowView != null) {
-            viewFlipper = (ViewFlipper)slideshowView.findViewById(R.id.view_flipper);
-            filesLoadingProgressIndicator = slideshowView.findViewById(R.id.progress_indicator);
+            mainImageView = (ImageView)slideshowView.findViewById(R.id.main_image_view);
+            filesLoadingProgressView = slideshowView.findViewById(R.id.progress_view);
         }
         return slideshowView;
     }
@@ -55,9 +59,23 @@ public class SlideshowFragment extends Fragment implements LoaderManager.LoaderC
         if(getActivity().getActionBar() != null) {
             getActivity().getActionBar().hide();
         }
+        getDataFromArguments();
         fillStorePaths();
-        filesLoadingProgressIndicator.setVisibility(View.VISIBLE);
-        getLoaderManager().initLoader(0, null, this);
+        filesLoadingProgressView.setVisibility(View.VISIBLE);
+        if(storePaths.size() != 0) {
+            getLoaderManager().initLoader(0, null, this);
+        } else {
+            getView().findViewById(R.id.progress_indicator).setVisibility(View.INVISIBLE);
+            TextView textLabel = (TextView)getView().findViewById(R.id.progress_label);
+            textLabel.setText(R.string.no_image_files);
+            textLabel.setVisibility(View.VISIBLE);
+            showNavigationHint();
+        }
+    }
+
+    private void getDataFromArguments() {
+        credentials = (Credentials)getArguments().get(CREDENTIALS_ARG);
+        imagesPaths = (List<String>)getArguments().get(IMG_PATHS_ARG);
     }
 
     private void fillStorePaths() {
@@ -72,6 +90,19 @@ public class SlideshowFragment extends Fragment implements LoaderManager.LoaderC
 
     @Override
     public void onDestroy() {
+        if(scheduleTaskExecutor != null) {
+            scheduleTaskExecutor.shutdownNow();
+        }
+
+        mainImageView.removeCallbacks(null);
+        Drawable drawable = mainImageView.getDrawable();
+        mainImageView.setImageDrawable(null);
+
+        if (drawable instanceof BitmapDrawable) {
+            Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+            bitmap.recycle();
+        }
+
         for(String loadedImagePath : storePaths) {
             boolean succeeded = new File(loadedImagePath).delete();
             if(!succeeded) {
@@ -89,52 +120,59 @@ public class SlideshowFragment extends Fragment implements LoaderManager.LoaderC
 
     @Override
     public void onLoadFinished(Loader<List<File>> listLoader, List<File> files) {
-        filesLoadingProgressIndicator.setVisibility(View.GONE);
+        filesLoadingProgressView.setVisibility(View.GONE);
         if(((ImagesLoader)listLoader).errorOccurred()) {
             Log.d(LOG_TAG, ((ImagesLoader) listLoader).getLastExceptionMessage());
         } else {
-            fillViewFlipper();
-            viewFlipper.setAutoStart(true);
-            viewFlipper.setFlipInterval(3000);
-            Toast.makeText(getActivity(), "Press back to exit", Toast.LENGTH_SHORT).show();
-            viewFlipper.startFlipping();
+            startSlideshow();
         }
     }
 
-    private void fillViewFlipper() {
-        for(String loadedImagePath : storePaths) {
-            File imgFile = new  File(loadedImagePath);
-            if(imgFile.exists()){
-                Bitmap bitmap = decodeWithScaling(imgFile.getAbsolutePath());
-                ImageView imageView = new ImageView(getActivity());
-                imageView.setImageBitmap(bitmap);
-                viewFlipper.addView(imageView);
+    private void startSlideshow() {
+        scheduleTaskExecutor = Executors.newScheduledThreadPool(1);
+        scheduleTaskExecutor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                File imgFile;
+                do {
+                    imgFile = new  File(storePaths.get(currentImage));
+                    currentImage = (currentImage + 1) % storePaths.size();
+                } while (!imgFile.exists());
+                final Bitmap bitmap;
+                if(imgFile.exists()) {
+                    bitmap = decodeWithScaling(imgFile.getAbsolutePath());
+                } else {
+                    return;
+                }
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainImageView.setImageBitmap(bitmap);
+                    }
+                });
             }
-        }
+        }, 0, 3, TimeUnit.SECONDS);
+        showNavigationHint();
+    }
+
+    private void showNavigationHint() {
+        Toast.makeText(getActivity(), "Press back to exit", Toast.LENGTH_SHORT).show();
     }
 
     private Bitmap decodeWithScaling(String imgFilePath) {
-        /* Get the size of the ImageView */
         WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         int screenWidth = display.getWidth();
         int screenHeight = display.getHeight();
 
-        /* Get the size of the image */
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(imgFilePath, bmOptions);
         int imageWidth = bmOptions.outWidth;
         int imageHeight = bmOptions.outHeight;
 
-        /* Figure out which way needs to be reduced less */
-        int scaleFactor = Math.min(imageWidth/screenWidth, imageHeight/screenHeight);
-
-        /* Set bitmap options to scale the image decode target */
         bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
-//        bmOptions.inPurgeable = true;
-//
+        bmOptions.inSampleSize = Math.max(imageWidth / screenWidth, imageHeight / screenHeight);
         return BitmapFactory.decodeFile(imgFilePath, bmOptions);
     }
 
