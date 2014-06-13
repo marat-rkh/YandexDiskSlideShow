@@ -8,6 +8,7 @@ import android.support.v4.content.Loader;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.*;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -21,11 +22,14 @@ import java.util.List;
 
 public class FileListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<List<ListItem>> {
 
-    private static final String LOG_TAG = "ListExampleFragment";
+    private final String LOG_TAG = "ListExampleFragment";
     public static final String FRAGMENT_TAG = "FileList";
 
-    private static final String CURRENT_DIR_KEY = "example.current.dir";
-    private static final String ROOT_DIR = "/";
+    private final String CURRENT_DIR_KEY = "current.dir.key";
+    private final String ROOT_DIR = "/";
+
+    private final String LOADING_MSG = "Loading files list...";
+    private final String ERROR_LOADING_MSG = "Sorry, can't load files list";
 
     private Credentials credentials;
     private String currentDir = ROOT_DIR;
@@ -35,12 +39,10 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
         setCredentials();
-        setDefaultEmptyText();
+        setEmptyText(LOADING_MSG);
         setHasOptionsMenu(true);
         setCurrentDirIfNeeded();
-
         if(getActivity().getActionBar() != null) {
             getActivity().getActionBar().show();
             getActivity().getActionBar().setDisplayHomeAsUpEnabled(!ROOT_DIR.equals(currentDir));
@@ -53,10 +55,6 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
         String username = preferences.getString(MainAuthActivity.USERNAME_ENTRY, null);
         String token = preferences.getString(MainAuthActivity.TOKEN_ENTRY, null);
         credentials = new Credentials(username, token);
-    }
-
-    private void setDefaultEmptyText() {
-        setEmptyText(getString(R.string.no_files));
     }
 
     private void setCurrentDirIfNeeded() {
@@ -73,6 +71,7 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
         getLoaderManager().initLoader(0, null, this);
     }
 
+    // action bar methods overriding
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
@@ -86,7 +85,7 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
                 getActivity().getSupportFragmentManager().popBackStack();
                 break;
             case R.id.start_slideshow:
-                launchSlideshow();
+                launchSlideShow();
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -94,14 +93,14 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
         return true;
     }
 
-    private void launchSlideshow() {
+    private void launchSlideShow() {
         ArrayList<String> imagePaths = getImagesPaths();
         Bundle args = new Bundle();
-        args.putParcelable(SlideshowFragment.CREDENTIALS_ARG, credentials);
-        args.putStringArrayList(SlideshowFragment.IMG_PATHS_ARG, imagePaths);
-        Fragment slideshowFragment = new SlideshowFragment();
-        slideshowFragment.setArguments(args);
-        ReplaceFragment(slideshowFragment, SlideshowFragment.FRAGMENT_TAG);
+        args.putParcelable(SlideShowFragment.CREDENTIALS_ARG, credentials);
+        args.putStringArrayList(SlideShowFragment.IMG_PATHS_ARG, imagePaths);
+        Fragment slideShowFragment = new SlideShowFragment();
+        slideShowFragment.setArguments(args);
+        replaceFragment(slideShowFragment, SlideShowFragment.FRAGMENT_TAG);
     }
 
     private ArrayList<String> getImagesPaths() {
@@ -129,12 +128,11 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
             setListShownNoAnimation(true);
         }
         if (data.isEmpty()) {
-            Exception ex = ((FileListLoader) loader).getLastException();
-            if (ex != null) {
-                setEmptyText(ex.getMessage());
-            } else {
-                setDefaultEmptyText();
+            String errorMessage = ((FileListLoader) loader).getLastErrorMessage();
+            if (errorMessage != null) {
+                Log.d(LOG_TAG, "FileListLoader exception: " + errorMessage);
             }
+            setEmptyText(ERROR_LOADING_MSG);
         } else {
             fileListAdapter.setData(data);
         }
@@ -162,10 +160,10 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
 
         FileListFragment fragment = new FileListFragment();
         fragment.setArguments(args);
-        ReplaceFragment(fragment, FRAGMENT_TAG);
+        replaceFragment(fragment, FRAGMENT_TAG);
     }
 
-    private void ReplaceFragment(Fragment fragment, String fragmentTag) {
+    private void replaceFragment(Fragment fragment, String fragmentTag) {
         getActivity().getSupportFragmentManager()
         .beginTransaction()
         .replace(android.R.id.content, fragment, fragmentTag)

@@ -1,12 +1,10 @@
-package ru.yandexphoto;
+package tmp;
 
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
-import android.util.Log;
 import com.yandex.disk.client.Credentials;
 import com.yandex.disk.client.ProgressListener;
 import com.yandex.disk.client.TransportClient;
-import com.yandex.disk.client.exceptions.CancelledPropfindException;
 import com.yandex.disk.client.exceptions.WebdavException;
 
 import java.io.File;
