@@ -30,8 +30,8 @@ public class MainAuthActivity extends FragmentActivity {
 
     private final String LOG_TAG = "ExampleActivity";
 
-    private final String CLIENT_ID = "da724839add94dd39d3f5dbcdf45217d";
-    private final String CLIENT_SECRET = "852d8d46d7a349f0a55e96c99749c91d";
+    private final String CLIENT_ID = "e32c303e86224c7490c07142918d524b";
+    private final String CLIENT_SECRET = "bdcdbe30415647fba6893a1aad371bcd";
 
     private final String ACCOUNT_TYPE = "com.yandex";
     private final String AUTH_URL = "https://oauth.yandex.ru/authorize?response_type=token&client_id=" + CLIENT_ID;
