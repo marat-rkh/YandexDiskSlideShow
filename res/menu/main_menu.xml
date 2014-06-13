@@ -5,4 +5,9 @@
           android:title="Start slideshow"
           android:visible="true"
           android:showAsAction="always"/>
+    <item android:id="@+id/refresh_list"
+          android:icon="@drawable/ic_refresh"
+          android:title="Refresh"
+          android:visible="true"
+          android:showAsAction="always"/>
 </menu>

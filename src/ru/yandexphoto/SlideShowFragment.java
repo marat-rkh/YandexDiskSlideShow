@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.concurrent.*;
 
 public class SlideShowFragment extends Fragment {
-
     private static final String LOG_TAG = "SlideShowFragment";
     public static final String FRAGMENT_TAG = "SlideShowView";
     public static final String CREDENTIALS_ARG = "CredentialsArg";

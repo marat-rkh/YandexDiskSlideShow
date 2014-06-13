@@ -1,5 +1,6 @@
 package ru.yandexphoto;
 
+import android.graphics.Typeface;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
@@ -86,6 +87,10 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
                 break;
             case R.id.start_slideshow:
                 launchSlideShow();
+                break;
+            case R.id.refresh_list:
+                setListShown(false);
+                getLoaderManager().restartLoader(0, null, this);
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -198,6 +203,11 @@ public class FileListFragment extends ListFragment implements LoaderManager.Load
                 viewHolder = (ViewHolder)convertView.getTag();
             }
             viewHolder.textView.setText(getItem(position).getDisplayName());
+            if(getItem(position).isCollection()) {
+                viewHolder.textView.setTypeface(null, Typeface.BOLD);
+            } else {
+                viewHolder.textView.setTypeface(null, Typeface.NORMAL);
+            }
             return convertView;
         }
 
