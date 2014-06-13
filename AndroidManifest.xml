@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="ru.yandexphoto"
+          package="ru.yandex.slideshow"
           android:versionCode="1"
           android:versionName="1.0">
     <uses-sdk android:minSdkVersion="11" android:targetSdkVersion="16"/>
@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.USE_CREDENTIALS"/>
 
     <application android:label="@string/app_name" android:icon="@drawable/ic_launcher">
-        <activity android:name=".MainAuthActivity"
+        <activity android:name="ru.yandex.slideshow.MainAuthActivity"
                   android:label="@string/app_name"
                   android:theme="@android:style/Theme.Holo.Light"
                   android:screenOrientation="portrait">

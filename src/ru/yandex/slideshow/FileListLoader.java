@@ -1,4 +1,4 @@
-package ru.yandexphoto;
+package ru.yandex.slideshow;
 
 import android.content.Context;
 import android.os.Handler;
